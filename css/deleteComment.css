@@ -1,0 +1,31 @@
+@charset "utf-8";
+/*通用*/
+body {   margin:0px;  padding:0px; background: #DCEFFE; }
+ul,li,p,h1,h2,h3,h4,h5,h6,dl,dt,dd {  margin:0px;  padding:0px;  border:none;  list-style:none;  }
+input {border:none;}  .lf{float:left;}  .rt{float:right;}  .clear{clear:both;}
+
+a{  text-decoration: none;  text-decoration-color:#666666;  }
+/*******************/
+.main-One,nav{width: 980px;margin: 0 auto;}
+.nav>li{width: 150px;  text-align: center;  border-right: 1px solid #ddd;}
+.main{
+    width: 981px;
+    margin: 0 auto;
+    background: #FBFBFD;
+    margin-bottom: 15px;
+}
+.allPage{
+    margin-top: 60px;
+}
+ .main .main-One {
+    padding: 21px;
+    border: 1px solid;
+     margin: 0px;
+}
+.one-Aside p{
+    margin-top: 22px;
+}
+.one-Text{
+    border-left: 1px solid;
+}
+
