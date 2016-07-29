@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>游记编辑</title>
+<link rel="stylesheet" type="text/css" href="/fdj/css/easyui.css">
+<link rel="stylesheet" type="text/css" href="/fdj/css/icon.css">
+<link rel="stylesheet" href="/fdj/css/ui-dialog.css">
+<link rel="stylesheet" type="text/css"
+	href="/fdj/css/uploadify.css">
+<style type="text/css">
+@CHARSET "UTF-8";
+
+/*common.css*/
+body,button,input,select,textarea{font:12px/1.5 arial,'Hiragino Sans GB','微软雅黑','宋体',tahoma,Srial,helvetica,sans-serif;-webkit-font-smoothing:antialiased;}
+body,h1,h2,h3,h4,h5,h6,hr,p,blockquote,dl,dt,dd,ul,ol,li,pre,form,fieldset,legend,button,input,textarea,th,td,img{font-weight:400;outline:0;border:medium none;margin:0;padding:0;list-style:none;}
+
+#win input {
+	width: 300px;
+}
+#baidumap {
+    width: 450px;
+    height: 250px;
+    border: 1px solid #e0e0e0;
+    display: inline-block;
+    margin: 7px 0 0;
+    background: #ccc;
+}
+.option {
+    display: inline-block;
+    /* vertical-align: top;*/
+    padding-right: 5px;
+    height: 40px;
+    width: 75px;
+    text-align: right;
+    line-height: 40px;
+    font-size: 12px;
+    color: #666;
+}
+.read-only{
+	display:none;
+}
+
+</style>
+<script src="http://libs.baidu.com/jquery/2.1.4/jquery.js"></script>
+<script src="/fdj/js/jquery.easyui.min.js"></script>
+<script src="/fdj/js/easyui-lang-zh_CN.js"></script>
+<script src="/fdj/js/yuelj.js"></script>
+<script src="/fdj/js/dialog-min.js"></script>
+<script src="/fdj/js/jquery.uploadify.min.js"></script>
+<script src="http://api.map.baidu.com/api?v=2.0&ak=wYqPUGWFGbs2qFIaAmC3uBDl"></script>
+<script src="/fdj/js/pagejs/travelNotes/travelNotes.js"></script>
+
+</head>
+<body>
+	<div style="padding:10px;">
+		<div id="serachdiv">
+			<input id="searchTravelName" class="easyui-textbox" type="text"
+				name="searchTravelName"
+				data-options="buttonText:'游记名称',buttonAlign:'left'" /> <select
+				id="searchState" class="easyui-combobox"
+				data-options="buttonText:'状态',buttonAlign:'left',editable:false"
+				name="searchState" style="width: 200px;">
+				<option value="2">审核中</option>
+				<option value="1">有效</option>
+				<option value="3">审核不通过</option>
+				<option value="0">已删除</option>
+			</select> <a id="searchButton" href="javascript:void(0);" onclick="searchButtonClick()"
+				class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+		</div>
+		
+		<table id="dg" class="easyui-datagrid"></table>
+		
+		<div id="w" class="easyui-window">
+			<div class="easyui-panel" title="游记主要信息"
+				style="width: 800px; height: 520px; padding: 10px; background: #fafafa;"
+				data-options="iconCls:'icon-save',closable:false,
+                collapsible:true,minimizable:false,maximizable:false">
+				<div style="margin-top: 10px;">
+					<input id="title" class="easyui-textbox"
+						data-options="buttonText:'游记名称',buttonAlign:'left'">
+					<input id="day" class="easyui-textbox"
+						data-options="buttonText:'行程天数',buttonAlign:'left'">
+				</div>
+				<div style="margin-top: 10px;">
+					<input id="price" class="easyui-textbox"
+						data-options="buttonText:'价格',buttonAlign:'left'">
+					<input id="actualprice" class="easyui-textbox"
+						data-options="buttonText:'折后价',buttonAlign:'left'">
+				</div>
+				<div style="margin-top: 10px;">
+					<input id="bestmonth" class="easyui-textbox"
+						data-options="buttonText:'最适宜旅行月',buttonAlign:'left'"> 
+					<input id="rank" class="easyui-textbox"
+						data-options="buttonText:'排序',buttonAlign:'left'">
+				</div>
+				<div style="margin-top: 10px;">
+					<input id="keyword" class="easyui-textbox"
+						data-options="buttonText:'关键词',buttonAlign:'left'">
+					<input id="address" class="easyui-textbox"
+						data-options="buttonText:'地址',buttonAlign:'left'" />
+				</div>
+				<div style="margin-top: 10px;">
+					<input id="content" class="easyui-textbox"
+						data-options="buttonText:'推荐词',buttonAlign:'left',width:'602px'" />
+				</div>
+				<img id="preViewImg" alt="没有图片" src=""
+					style="width: 300px; height: 200px; margin-top: 10px;">
+				<div class="detail-edit">
+					<br />
+					<input type="file" name="uploadify" id="uploadify" />
+					<div style="display: none">
+						<input type="text" name="pic" class="easyui-textbox"
+							data-options="buttonText:'',buttonAlign:'left'" id="pic" />
+					</div>
+				</div>
+				<div id="saveTravel" style="text-align:center;">
+					<a href="javascript:void(0)" onclick="saveTravelClick()" class="easyui-linkbutton detail-edit"
+						data-options="iconCls:'icon-edit'">保存以上内容</a>
+					<span id="saveTravelResult"></span>
+				</div>
+			</div>
+			<a href="javascript:void(0)" onclick="newDetail();" class="easyui-linkbutton detail-edit" 
+				style="margin:10px;" data-options="iconCls:'icon-edit'">新增一条详情</a>
+			<div id="detailSavedDiv"></div>
+		</div>
+		<div id="detail-win" style="padding: 10px; background: #fafafa;">
+			<input type="hidden" id="detail-id" value="" />
+			<div class="detail-list">
+				<!-- 1景点，2客栈，3其他 -->
+				<span class="option">类型</span>
+				<select id="detailType" name="detailType" class="easyui-combobox">
+					<option value="1">景点</option>
+					<option value="2">客栈</option>
+					<option value="3">其他</option>
+				</select>
+			</div>
+			<div class="detail-list">
+				<span class="option">景点或客栈</span>
+				<input id="destinationid" name="destinationid" class="easyui-combobox" />
+				<span>(输入名称自动查询)</span>&nbsp;
+				<a href="javascript:void(0)" onclick="setLoc()" class="easyui-linkbutton"
+					data-options="iconCls:'icon-search'">搜索地图</a>
+			</div>
+			<!-- 百度地图 -->
+			<div class="detail-list">
+			  <span  class="option">地图坐标</span>
+			    <div id="baidumap"></div>
+			    <!-- 保存经纬度 -->
+			    <input type="hidden" id="lon" name="longitude" value="">
+			    <input type="hidden" id="lat" name="latitude" value="">
+			</div>
+			<div class="detail-list">
+				<span  class="option">时间</span>
+				<input id="detailtime" class="easyui-datetimebox" name="time" data-options="showSeconds:false" />
+			</div>
+			<div class="detail-list">
+				<span  class="option">文字描述</span>
+				<textarea id="detailtext" style="width:440px;height:150px;font-size:12px;border:#e0e0e0 1px solid;padding:5px;"></textarea>
+			</div>
+			<div class="detail-list">
+				<span  class="option">游记照片</span>
+				<img id="preViewImgDetail" alt="" src="" style="display: inline-block; height: 120px; width: 160px;">
+				<label for="uploadifyDetail" style="display: inline-block;position: relative;top: -12px;">
+					<input type="file" name="uploadifyDetail" id="uploadifyDetail" />
+				</label>
+				<input type="text" id="picDetail" name="picDetail" style="display: none" />
+				<span id="picLoadingtext"></span>
+			</div>
+			<div id="fileQueueDetail" style="display: none"></div>
+			<a href="javascript:void(0)" onclick="saveTravelDetailClick()" class="easyui-linkbutton"
+				data-options="iconCls:'icon-edit'" style="position:relative;left:50%;margin-left:-38px;margin-bottom:20px;">保存详情</a>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>客栈审核</title>
+<link rel="stylesheet" type="text/css" href="/fdj/css/easyui.css">
+<link rel="stylesheet" type="text/css" href="/fdj/css/icon.css">
+<link rel="stylesheet" href="/fdj/css/ui-dialog.css">
+<style type="text/css">
+
+@CHARSET "UTF-8";
+/*common.css*/
+body,button,input,select,textarea{font:12px/1.5 arial,'Hiragino Sans GB','微软雅黑','宋体',
+		tahoma,Srial,helvetica,sans-serif;-webkit-font-smoothing:antialiased;}
+body,h1,h2,h3,h4,h5,h6,hr,p,blockquote,dl,dt,dd,ul,ol,li,pre,form,fieldset,legend,button,input,textarea,th,td,img{
+		font-weight:400;outline:0;border:medium none;margin:0;padding:0;list-style:none;}
+
+#win input {
+	width: 300px;
+}
+</style>
+<script src="http://libs.baidu.com/jquery/2.1.4/jquery.js"></script>
+<script src="/fdj/js/jquery.easyui.min.js"></script>
+<script src="/fdj/js/easyui-lang-zh_CN.js"></script>
+<script src="/fdj/js/yuelj.js"></script>
+<script src="/fdj/js/dialog-min.js"></script>
+<script type="text/javascript">
+	//客栈列表
+	var innList = [];
+	//当前客栈序号
+	var innOder = 0;
+	//分页参数
+	var pageJson = {
+		pageNum : 1,
+		pageSize : 20,
+		totalCount : 0
+	};
+	//传入后台查询用户的参数
+	var postData = {
+		state : "2",
+		pageJson : JSON.stringify(pageJson),
+		type : "inn_seller"
+	};
+	$(function() {
+		$.yuelj.checkPermission("operator");
+		//用户列表
+		$('#dg').datagrid({
+			loadMsg : '数据加载中,请稍后...',
+			singleSelect : true,
+			height : 750,
+			pagination : true,
+			columns : [ [ {
+				field : 'id',
+				title : '用户id',
+				hidden : true
+			}, {
+				field : 'name',
+				title : '昵称',
+				width : 100
+			},  {
+				field : 'account',
+				title : '账户',
+				width : 100
+			},{
+				field : 'phone',
+				title : '电话',
+				width : 100
+			}, {
+				field : 'type',
+				title : '类型',
+				width : 100,
+				formatter: formatType
+			}, {
+				field : 'state',
+				title : '状态',
+				formatter: formatState,
+				width : 100
+			}, {
+				field : 'city',
+				title : '城市',
+				width : 100
+			}, {
+				field : 'sex',
+				title : '性别',
+				width : 100,
+				align : 'right'
+			}, {
+				field : 'birthday',
+				title : '生日',
+				width : 100,
+				align : 'right'
+			}, {
+				field : 'description',
+				title : '描述',
+				width : 100,
+				align : 'right'
+			}, {
+				field : 'pic',
+				title : '头像',
+				width : 100,
+				align : 'right'
+			} ] ],
+			toolbar : [ {
+				iconCls : 'icon-search',
+				text : '查看客栈',
+				handler : function() {
+					var row = $('#dg').datagrid("getSelected");
+					if (row.id != null) {
+						loadWin(row.id);
+					}
+				}
+			}, '-', {
+				iconCls : 'icon-edit',
+				text : '用户审核通过',
+				handler : function() {
+					approveInnUserClick(1);
+				}
+			}, '-', {
+				iconCls : 'icon-ok',
+				text : '解除用户冻结',
+				handler : function() {
+					approveInnUserClick(1);
+				}
+			}, '-', {
+				iconCls : 'icon-clear',
+				text : '冻结用户账号',
+				handler : function() {
+					approveInnUserClick(3);
+				}
+			} ]
+		});
+		//客栈窗体
+		$('#win').window({
+			width : 800,
+			height : 600,
+			modal : false,
+			title : "客栈信息",
+			resizable : false
+		});
+		$('#win').window('close');
+		$('#dg').datagrid({
+
+		});
+		loadDataGrid();
+	});
+	
+	//格式化表格数据
+	function formatType(val,row){
+		switch(val){
+		case "inn_seller":
+			return '客栈管理员';
+		case "operator":
+			return "后台管理员";
+		case "user":
+			return 'app用户';
+		case "guide":
+			return '导游';
+		}
+	}
+	
+	function formatState(val,row){
+		switch(val){
+		case "1":
+			return '有效';
+		case "0":
+			return "无效";
+		case "2":
+			return '审核中';
+		}
+	}
+	
+	var from = 0;
+	var to = 0;
+	//加载分页条
+	function initPagination() {
+		$('#dg').datagrid("getPager").pagination(
+				{
+					total : pageJson.totalCount,
+					pageSize : pageJson.pageSize,
+					pageNumber : parseInt(pageJson.pageNum),
+					onSelectPage : function(pageNum, pageSize) {
+						$(this).pagination('loading');
+						pageJson.pageSize = pageSize;
+						pageJson.pageNum = pageNum;
+						postData.pageJson = JSON.stringify(pageJson);
+						loadDataGrid();
+						$(this).pagination('loaded');
+					},
+					displayMsg : '当前显示' + from + "到" + to + '条记录   共'
+							+ pageJson.totalCount + ' 条记录'
+				});
+
+	}
+	//加载用户列表
+	function loadDataGrid() {
+		//1有效，0无效，2审核中
+		$.ajax({
+			url : "/fdj/operator/selectUsers.action",
+			data : postData,
+			success : function(returnData) {
+				if (returnData == null || returnData.list == null) {
+					$.yuelj.alertMessage('提示', '获取失败!');
+				} else {
+					$('#dg').datagrid("loadData", {
+						"rows" : returnData.list
+					});
+					if (returnData.list.length != 0) {
+						$('#dg').datagrid("selectRow", 0);
+					}
+					pageJson.totalCount = returnData.page.totalCount;
+					returnData.page.totalCount == 0 ? from = 0 : from = returnData.page.ifrom + 1;
+					to = pageJson.pageSize * pageJson.pageNum;
+					if (to > pageJson.totalCount) {
+						to = pageJson.totalCount;
+					}
+					pageJson.pageSize = returnData.page.pageSize;
+					pageJson.pageNum = returnData.page.pageNum;
+
+					initPagination();
+				}
+
+			}
+		});
+	}
+	//加载客栈窗体
+	function loadWin(rowid) {
+		$.ajax({
+			url : "/fdj/selectInnInfoByUid.action",
+			data : {
+				uid : rowid
+			},
+			success : function(returnData) {
+				if (returnData == null || returnData.list == null) {
+					$.yuelj.alertMessage('提示', '获取失败!');
+				} else {
+					innList = returnData.list;
+					if (innList.length != 0) {
+						loadInn();
+						$('#win').window('open');
+					}
+				}
+			}
+		});
+	}
+	//加载客栈数据
+	function loadInn() {
+		$('#win input').each(function() {
+			var name = $(this).attr('id');
+			if (name != null) {
+				var value = innList[0][name];
+				$("#" + name).textbox('setValue', value);
+			}
+		});
+		$("#pic").attr("src", $.yuelj.imageurlPre + innList[0]["pic"]);
+	}
+	//审核客栈
+	function approveInnClick() {
+		var row = innList[innOder];
+		row.state = "1";
+		$.ajax({
+			url : "/fdj/operator/updateInnInfoState.action",
+			data : {
+				entityJson : JSON.stringify(row)
+			},
+			success : function(returnData) {
+				if ($.yuelj.parseReturn(returnData)) {
+					$.yuelj.alertMessage('提示', "客栈审核成功！");
+					$('#win').window('close');
+				}
+			}
+		});
+
+	}
+	//审核客栈管理员用户
+	function approveInnUserClick(userState) {
+		//获取选中
+		var row = $('#dg').datagrid('getSelected');
+		if (row != null) {
+			row.state = userState;
+			$.ajax({
+				url : "/fdj/operator/updateUserState.action",
+				data : {
+					entityJson : JSON.stringify(row)
+				},
+				success : function(returnData) {
+					if ($.yuelj.parseReturn(returnData)) {
+						$.yuelj.alertMessage('提示', "操作成功");
+						loadDataGrid();
+					}
+				}
+			});
+		}
+	}
+	//查询按钮点击
+	function searchButtonClick() {
+		pageJson = {
+			pageNum : 1,
+			pageSize : 20,
+			totalCount : 0
+		};
+		postData.pageJson.pageJson = JSON.stringify(pageJson);
+		var state = $("#searchState").textbox('getValue');
+		var phone = $("#searchPhone").textbox('getValue');
+		if (state != null && state.length != 0) {
+			postData.state = state;
+		}
+		if (phone != null && phone.length != 0) {
+			postData.phone = phone;
+		}
+		loadDataGrid();
+	}
+</script>
+</head>
+<body>
+	<div id="content" style="padding:10px;">
+		<div id="serachdiv">
+			<input id="searchPhone" class="easyui-textbox" type="text" name="searchPhone"
+				data-options="buttonText:'电话号码',buttonAlign:'left'" /> <select
+				id="searchState" class="easyui-combobox"
+				data-options="buttonText:'状态',buttonAlign:'left',editable:false"
+				name="searchState" style="width: 200px;">
+				<option value="2">审核中</option>
+				<option value="0">无效</option>
+				<option value="1">有效</option>
+				<option value="3">冻结</option>
+			</select> <a id="searchButton" href="javascript:void(0);" onclick="searchButtonClick()"
+				class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+		</div>
+		<table id="dg" class="easyui-datagrid" style="">
+
+		</table>
+		<div id="win" style="text-align: center;">
+			<input id="name" class="easyui-textbox"
+				data-options="buttonText:'客栈名称',buttonAlign:'left',readonly:'ture'"
+				style=""> <input id="linkMan" class="easyui-textbox"
+				data-options="buttonText:'联系人',buttonAlign:'left',readonly:'ture'">
+			<input id="linkPhone" class="easyui-textbox"
+				data-options="buttonText:'联系电话',buttonAlign:'left',readonly:'ture'">
+			<input id="description" class="easyui-textbox"
+				data-options="buttonText:'描述',buttonAlign:'left',readonly:'ture'">
+			<input id="city" class="easyui-textbox"
+				data-options="buttonText:'古城',buttonAlign:'left',readonly:'ture'">
+			<input id="address" class="easyui-textbox"
+				data-options="buttonText:'地址',buttonAlign:'left',readonly:'ture'">
+			<input id="longitude" class="easyui-textbox"
+				data-options="buttonText:'经度',buttonAlign:'left',readonly:'ture'"><input
+				id="latitude" class="easyui-textbox"
+				data-options="buttonText:'纬度',buttonAlign:'left',readonly:'ture'"><input
+				id="state" class="easyui-textbox"
+				data-options="buttonText:'状态',buttonAlign:'left',readonly:'ture'"><label>2未审核，1有效</label>
+			<img id="pic" alt="图破了" src="" style="width: 600px; height: 400px;">
+			<a id="approve" href="#" onclick="approveInnClick()"
+				class="easyui-linkbutton" data-options="iconCls:'icon-edit'">客栈审核通过</a>
+		</div>
+	</div>
+</body>
+</html>

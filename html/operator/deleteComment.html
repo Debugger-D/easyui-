@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="../../css/bootstrap.css"/>
+    <link rel="stylesheet" href="../../css/deleteComment.css"/>
+</head>
+<body>
+    <nav class="nav navbar-default navbar-fixed-top " role="navigation">
+        <div>
+            <ul class="nav navbar-nav" id="nav-header">
+                <li class="dropdown type-1">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        交流圈 <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="selectAll"><a href="#">查看全部</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li class="selectNotDeleted"><a href="#">未删除</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li class="selectDeleted"><a href="#">已删除</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown type-2">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        策略圈 <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="selectAll"><a href="#">查看全部</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li class="selectNotDeleted"><a href="#">未删除</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li class="selectDeleted"><a href="#">已删除</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <button class="btn btn-success" id="addComment" style=" display: none;   margin: 7px 0 0 190px;">发帖</button>
+        </div>
+    </nav>
+    <div class="allPage">
+        <div style="margin: 0 auto;width: 980px;display:none;background: #ddd;" id="commentBox">
+            <textarea name="" id="" cols="114" rows="10" style="margin: 33px 0 0 21px ;"></textarea>
+            <button class="btn btn-primary" style="margin: 0 0 28px 63px;" id="submitComment">提交</button>
+        </div>
+        <div class="main" id="main">
+
+        </div>
+    </div>
+
+    <script src="../../js/jquery-1.11.3.min.js"></script>
+    <script src="../../js/bootstrap.min.js"></script>
+    <script>
+        //设置后台接受数据参数
+        var entityJson={};
+        //entityJson.type=1; //默认类型为1
+        var postData={};
+        var pageJson = {
+            pageNum : 1,
+            pageSize : 20
+        };
+        $(document).ready(function () {
+            //发帖功能
+
+            $('#addComment').click(function () {
+                $('#commentBox').css('display','block');
+            });
+            $('#submitComment').click(function () {
+                entityJson.text=$('#commentBox textarea').val();
+                $('#commentBox').css('display','none');
+                addComment();
+            })
+            //选择type为的评论区
+            $('.type-1').click(function () {
+                $('#addComment').css('display','inline-block');
+                entityJson.type=1;
+                // commentLoad();
+            });
+            //选择type为1的评论区
+            $('.type-2').click(function () {
+                $('#addComment').css('display','none');
+                entityJson.type=2;
+                // commentLoad();
+            });
+            //选择全部评论
+            $('.selectAll').click(function () {
+                delete entityJson.status;
+                commentLoad();
+            });
+            //选择未删除评论
+            $('.selectNotDeleted').click(function () {
+               entityJson.status=1;
+                commentLoad();
+            });
+            //选择已删除评论
+            $('.selectDeleted').click(function () {
+                entityJson.status=0;
+                commentLoad();
+            });
+            //启动删除装置
+            $('#main').delegate('.deleteComment','click', function () {
+                entityJson.id=$(this).attr('d-id'); //传入当前被操作人被的id
+                entityJson.status=0;
+                operateComment0();
+            });
+            //启动恢复装置
+            $('#main').delegate('.recoverComment','click', function () {
+                entityJson.id=$(this).attr('d-id');
+                entityJson.status=1;
+                operateComment1();
+            });
+            //启动置顶装置
+            $('#main').delegate('.onTop','click', function () {
+                entityJson.id=$(this).attr('d-id');
+                entityJson.ontop=1;
+                operateComment0();
+            });
+            //启动取消置顶装置
+            $('#main').delegate('.cancelTop','click', function () {
+                entityJson.id=$(this).attr('d-id');
+                entityJson.ontop=0;
+                operateComment0();
+            });
+        });
+        //加载评论
+        function commentLoad() {
+            postData.entityJson=JSON.stringify(entityJson);
+            postData.pageJson=JSON.stringify(pageJson);
+            $.ajax({
+                url : "/fdj/selectMicroblog.action",
+                data : postData,
+                success : function(returnData) {
+                    if (returnData == null || returnData.list.length === 0) {
+                        $('#main').empty();
+                        alert('已经没有数据!');
+                    } else if (returnData.list.length != 0) {
+                        $('#main').empty();
+                        for (var i= 0;i<returnData.list.length;i++){
+                            (returnData.list[i].unickname==undefined)&& (returnData.list[i].unickname="没有称号");
+                            if(returnData.list[i].status==1){
+                                if(returnData.list[i].ontop==1){
+                                    $('#main').append('<div class="main-One row"> <div class="one-Aside col-md-2"> <h4>'+returnData.list[i].uname+'</h4> <p>'+returnData.list[i].unickname+'</p> </div> <div class="one-Text col-md-10"> <p>'+returnData.list[i].text+'</p> <p>'+returnData.list[i].senddate+'</p> <button class="deleteComment btn btn-default"   d-id="'+returnData.list[i].id+'">删除</button> <button class="cancelTop btn btn-default" d-id="'+returnData.list[i].id+'">取消置顶</button><b>id:'+returnData.list[i].id+'</b><b>status:'+returnData.list[i].status+'</b> </div> </div>')
+                                }else{
+                                    $('#main').append('<div class="main-One row"> <div class="one-Aside col-md-2"> <h4>'+returnData.list[i].uname+'</h4> <p>'+returnData.list[i].unickname+'</p> </div> <div class="one-Text col-md-10"> <p>'+returnData.list[i].text+'</p> <p>'+returnData.list[i].senddate+'</p> <button class="deleteComment btn btn-default"   d-id="'+returnData.list[i].id+'">删除</button> <button class="onTop btn btn-default" d-id="'+returnData.list[i].id+'">置顶</button><b>id:'+returnData.list[i].id+'</b><b>status:'+returnData.list[i].status+'</b> </div> </div>')
+                                }
+                            }else{
+                                $('#main').append('<div class="main-One row"> <div class="one-Aside col-md-2"> <h4>'+returnData.list[i].uname+'</h4> <p>'+returnData.list[i].unickname+'</p> </div> <div class="one-Text col-md-10"> <p>'+returnData.list[i].text+'</p> <p>'+returnData.list[i].senddate+'</p> <button class="recoverComment btn btn-default"   d-id="'+returnData.list[i].id+'">恢复</button> <b>id:'+returnData.list[i].id+'</b><b>status:'+returnData.list[i].status+'</b> </div> </div>')
+                            }
+                        }
+                    }
+                },
+                error:function(){alert('请求失败')}
+            });
+        };
+        //删除评论
+        function operateComment0(){
+            postData.entityJson=JSON.stringify(entityJson);
+            postData.pageJson=JSON.stringify(pageJson);
+            $.ajax({
+                url : "/fdj/operator/updateMicroblog.action",
+                data : postData,
+                success : function(returnData) {
+                    if (returnData === null) {
+                        alert('获取失败!');
+                    }else if(returnData.state==2){
+                        alert('登录过期，请重新登录')
+                    }else {
+                        //alert('操作成功') ;
+                        delete entityJson.id;
+                        entityJson.status=1;
+                        //postData.entityJson=JSON.stringify(entityJson);
+                        commentLoad()
+                    }
+                }
+            });
+        };
+        //操作评论
+        function operateComment1(){
+            postData.entityJson=JSON.stringify(entityJson);
+            postData.pageJson=JSON.stringify(pageJson);
+            $.ajax({
+                url : "/fdj/operator/updateMicroblog.action",
+                data : postData,
+                success : function(returnData) {
+                    if (returnData === null) {
+                        alert('获取失败!');
+                    }else if(returnData.state==2){
+                        alert('登录过期，请重新登录')
+                    } else {
+                        //alert('操作成功') ;
+                        delete entityJson.id;
+                        entityJson.status=0;
+                        //postData.entityJson=JSON.stringify(entityJson);
+                        commentLoad()
+                    }
+                }
+            });
+        };
+        //添加评论
+        function addComment(){
+            postData.entityJson=JSON.stringify(entityJson);
+            postData.pageJson=JSON.stringify(pageJson);
+            $.ajax({
+                url:"/fdj/operator/AddMicroblog.action",
+                data:postData,
+                success: function (returnData) {
+                    if (returnData.state === 0||returnData == null) {
+                        alert('获取失败!');
+                    } else if (returnData.state === 1){
+                        alert('发帖成功') ;
+                        delete entityJson.id;
+                        delete entityJson.text;
+                        commentLoad()
+                    }
+                }
+            })
+        };
+    </script>
+</body>
+</html>

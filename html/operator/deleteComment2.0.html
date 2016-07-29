@@ -1,0 +1,374 @@
+<html>
+<head>
+    <link rel="stylesheet" href="/fdj/css/easyui.css"/>
+    <!DOCTYPE html>
+    <meta charset="UTF-8">
+    <title>现货数据</title>
+    <link rel="stylesheet" type="text/css" href="/fdj/css/my_easyui.css">
+    <link rel="stylesheet" type="text/css" href="/fdj/css/icon.css">
+    <link rel="stylesheet" href="/fdj/css/ui-dialog.css">
+    <link rel="stylesheet" href="/fdj/css/bootstrap.css"/>
+    <style>
+        @CHARSET "UTF-8";
+        /*common.css*/
+        body,button,input,select,textarea{font:12px/1.5 arial,'Hiragino Sans GB','微软雅黑','宋体',tahoma,Srial,helvetica,sans-serif;-webkit-font-smoothing:antialiased;}
+        body,h1,h2,h3,h4,h5,h6,hr,p,blockquote,dl,dt,dd,ul,ol,li,pre,form,fieldset,legend,button,input,textarea,th,td,img{font-weight:400;outline:0;border:medium none;margin:0;padding:0;list-style:none;}
+    </style>
+    <style type="text/css">
+        #fm
+        {
+            margin: 0;
+            padding: 10px 30px;
+        }
+        .ftitle
+        {
+            font-size: 14px;
+            font-weight: bold;
+            padding: 5px 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        .fitem
+        {
+            margin-bottom: 5px;
+        }
+        .fitem label
+        {
+            display: inline-block;
+            width: 80px;
+        }
+        #fm input{
+            line-height:26px;
+            border:1px solid #ccc  ;
+        }
+
+    </style>
+</head>
+<body>
+<nav class="nav navbar-default navbar-fixed-top " role="navigation">
+    <div>
+        <ul class="nav navbar-nav" id="nav-header">
+            <li class="dropdown type-1">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    交流圈 <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li class="selectAll"><a href="#">查看全部</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li class="selectNotDeleted"><a href="#">未删除</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li class="selectDeleted"><a href="#">已删除</a></li>
+                </ul>
+            </li>
+            <li class="dropdown type-2">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    策略圈 <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li class="selectAll"><a href="#">查看全部</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li class="selectNotDeleted"><a href="#">未删除</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li class="selectDeleted"><a href="#">已删除</a></li>
+                </ul>
+            </li>
+        </ul>
+        <button class="btn btn-success" id="addComment" style=" display: none;   margin: 7px 0 0 190px;">发帖</button>
+    </div>
+</nav>
+<div id="div-content" style="padding:10px;     margin-top: 60px;">
+    <div id="tb" style="padding:3px">
+        <span>code:</span>
+        <input id="s-code" style="line-height:26px;border:1px solid #ccc">
+        <span>name:</span>
+        <input id="name" style="line-height:26px;border:1px solid #ccc">
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="onsearchh()">查找</a>
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="updateData()" style="margin-left: 480px">返回所有数据</a>
+    </div>
+    <div id="toolbar">
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+        onclick=" destroyUser()" iconcls="icon-remove" plain="true">删除</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-add"
+        onclick="addUser()" plain="true">上架</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-edit"
+        onclick="editUser()" plain="true">修改</a>
+    </div>
+    <table id="dg" class="easyui-datagrid" rownumbers="true"></table>
+</div>
+
+<div id="dlg" class="easyui-dialog" style="width: 400px; height: 380px; padding: 10px 20px;"
+     closed="false" buttons="#dlg-buttons" modal="true" >
+    <div class="ftitle">
+        信息编辑
+    </div>
+    <form id="fm" method="post">
+        <div class="fitem">
+            <label>
+                id
+            </label>
+            <input name="id" class="easyui-validatebox" data-options="required:true,validType:'length[1,320]'" disabled="true"/>
+        </div>
+        <div class="fitem">
+            <label>
+                code</label>
+            <input name="code" class="easyui-validatebox" data-options="required:true,validType:'length[1,320]'"disabled="true" />
+        </div>
+        <div class="fitem">
+            <label>
+                status</label>
+            <input name="status" class="easyui-validatebox"  data-options="required:true,validType:'length[1,320]'" disabled="true"/>
+        </div>
+        <div class="fitem">
+            <label>
+                name</label>
+            <input name="name" class="easyui-validatebox"  data-options="required:true,validType:'length[1,320]'"  />
+        </div>
+        <div class="fitem">
+            <label>
+                typeid</label>
+            <select name="" id="select-v">
+                <option value="1">1.国际</option>
+                <option value="2">2.银行</option>
+                <option value="3">3.天交所</option>
+                <option value="4">4.上交所</option>
+                <option value="0">0.其它</option>
+            </select>
+        </div>
+        <input type="hidden" name="action" id="hidtype" />
+        <input type="hidden" name="ID" id="Nameid" />
+    </form>
+</div>
+<div id="dlg-buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="saveUser()" iconcls="icon-save">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="javascript:$('#dlg').dialog('close')"
+       iconcls="icon-cancel">取消</a>
+</div>
+<script src="http://libs.baidu.com/jquery/2.1.4/jquery.js"></script>
+<script src="/fdj/js/jquery.easyui.min.js"></script>
+<script src="/fdj/js/easyui-lang-zh_CN.js"></script>
+<script src="../../js/bootstrap.min.js"></script>
+<script src="/fdj/js/dialog-min.js"></script>
+<script src="/fdj/js/yuelj.js"></script>
+<script type="text/javascript">
+    //分页参数
+    var pageJson = {
+        pageNum : 1,
+        pageSize : 20,
+        totalCount : 0
+    };
+    //传入后台查询用户的参数
+
+
+    $(function(){
+        onsearchh()   ;
+        $("#dlg").dialog("close");
+
+    });
+    //$('#s-code').val()!=''&&(entityJson.code= $('#s-code').val()) ;console.log(entityJson)
+    function onsearchh(){
+        var entityJson = {
+        };
+        var postData ={};
+        //传入后台查询用户的参数
+        $('#s-code').val()!=''&&(entityJson.code= $('#s-code').val()) ;
+        $('#name').val()!=''&&(entityJson.name= $('#name').val()) ;
+        //阐述json化
+        postData.pageJson = JSON.stringify(pageJson);
+        postData.entityJson = JSON.stringify(entityJson);
+
+        $('#dg').datagrid({
+            loadMsg : '数据加载中,请稍后...',
+            singleSelect : false,
+            nowrap:false,
+            height : 600,
+           // pagination : true,
+            pageList : [ 20, 40, 80 ],
+            pageSize : 20,
+            title:'发帖信息审核',
+            columns : [ [ {
+                field : 'checkbox',
+                checkbox:true
+            },{
+                field : 'text',
+                title : '内容',
+                width:400,
+                align : 'center'
+            },{
+                field : 'uname',
+                title : '作者',
+                width : 250,
+                align : 'center'
+            },{
+                field : 'senddate',
+                title : '发帖日期',
+                width : 250,
+                align : 'center',
+                editor:'text'
+            }] ] ,
+            //可编辑表格
+            iconCls:'icon-edit',
+            idField:'id',
+        });
+        loadDataGrid();
+
+        var from = 0;
+        var to = 0;
+        //加载分页条
+        /*function initPagination() {
+            $('#dg').datagrid("getPager").pagination(
+                    {
+                        total : pageJson.totalCount,
+                        pageSize : pageJson.pageSize,
+                        pageNumber : parseInt(pageJson.pageNum),
+                        onSelectPage : function(pageNum, pageSize) {
+                            $(this).pagination('loading');
+                            pageJson.pageSize = pageSize;
+                            pageJson.pageNum = pageNum;
+                            postData.pageJson = JSON.stringify(pageJson);
+
+                            loadDataGrid();
+                            $(this).pagination('loaded');
+                        },
+                        displayMsg : '当前显示' + from + "到" + to + '条记录   共'
+                        + pageJson.totalCount + ' 条记录'
+                    });
+
+        } */
+        //加载评论列表
+        function loadDataGrid() {
+            //0未审核，1有效，2审核不通过
+            $.ajax({
+                url : "/fdj/selectMicroblog.action",
+                data : postData,
+                success : function(returnData) {
+                    if (returnData == null || returnData.list == null) {
+                        alert('获取失败!');
+                    } else {
+                        $('#dg').datagrid("loadData", {
+                            "rows" : returnData.list
+                        });
+                        /*if (returnData.list.length != 0) {
+                            $('#dg').datagrid("selectRow", 0);
+                        } */
+                        pageJson.totalCount = returnData.page.totalCount;
+                        returnData.page.totalCount == 0 ? from = 0 : from = returnData.page.ifrom + 1;
+                        to = pageJson.pageSize * pageJson.pageNum;
+                        if (to > pageJson.totalCount) {
+                            to = pageJson.totalCount;
+                        }
+                        pageJson.pageSize = returnData.page.pageSize;
+                        pageJson.pageNum = returnData.page.pageNum;
+                        //initPagination();
+                    }
+                }
+            });
+        }
+    }
+    $('.easyui-linkbutton').click(function(){
+        onsearch();
+    })
+    //编辑当前选中行
+    function editUser() {
+        var row = $("#dg").datagrid("getSelected");
+        if (row) {
+            $("#dlg").dialog("open").dialog('setTitle', '编辑当前行');
+            $("#fm").form("load", row);
+            console.log(row.typeid);
+            $("#select-v option[value='"+row.typeid+"']").attr('selected','selected');
+        }
+    }
+    //删除当前选中行
+    function destroyUser() {
+        var row = $("#dg").datagrid("getSelected");
+
+        if (row.status==="1") {
+            $.messager.confirm('Confirm', '确定要删除吗？', function (r) {
+                if (r) {
+                    var entityJson = {
+                    };
+                    var postData ={};
+                    row.status="0" ;
+                    postData.entityJson = JSON.stringify(row);
+                    $.ajax({
+                        url: "/fdj/operator/updateMicroblog.action",
+                        data: postData,
+                        success: function (returnData) {
+                            if (returnData === null || returnData.message === null || returnData.state === 0) {
+                                console.login('无数据')
+                            } else {
+                                // alert(returnData.message);
+                                $.messager.alert('警告',returnData.message)
+                                onsearchh()   ;
+                            }
+                        }
+                        //error:function(){$.messager.alert('警告','请重新登录')}
+                    })
+                }
+            })
+        }else{ $.messager.alert('警告','商品不存在或还未上架')};
+    }
+    //上架选中项
+    function addUser() {
+        var row = $("#dg").datagrid("getSelected");
+
+        if (row.status==="0") {
+            $.messager.confirm('Confirm', '确定要上架吗？', function (r) {
+                if (r) {
+                    var entityJson = {
+                    };
+                    var postData ={};
+                    row.status="1" ;
+                    postData.entityJson = JSON.stringify(row);
+                    $.ajax({
+                        url: "/fdj/operator/updateMicroblog.action",
+                        data: postData,
+                        success: function (returnData) {
+                            if (returnData === null || returnData.message === null || returnData.state === 0) {
+                                console.login('无数据')
+                            }else {
+                                $.messager.alert('警告',returnData.message)
+                                onsearchh()   ;
+                            }
+                        }
+                        //error:function(){$.messager.alert('警告','响应失败')}
+                    })
+                }
+            })
+        }else{$.messager.alert('警告','商品不存在或已经上架')}
+    }
+
+    //保存变编辑信息
+    function saveUser() {
+        var entityJson = {
+        };
+        var postData ={};
+        entityJson.id = $("#dg").datagrid("getSelected").id;
+        entityJson.code = $("input[name='code']").val();
+        entityJson.name = $("input[name='name']").val();
+        entityJson.status = $("input[name='status']").val();
+        entityJson.typeid = $("#select-v option:selected").val();
+        postData.entityJson = JSON.stringify(entityJson);
+        $("#dlg").dialog("close");
+        console.log(JSON.stringify(entityJson))
+        $.ajax({
+            url: "/fdj/operator/updateMicroblog.action",
+            data: postData,
+            success: function (returnData) {
+                if (returnData == null || returnData.message == null) {
+                    $.messager.alert('警告',returnData.message)
+                } else {
+                    $.messager.alert('警告',returnData.message)
+                    onsearchh()   ;
+                }
+            }
+            //error: function () {$.messager.alert('警告','响应失败请重新登录')}
+        })
+    }
+    //返回所有数据
+    function updateData(){
+        $('#tb input').val("");
+        onsearchh()
+    }
+</script>
+</body>
+</html>

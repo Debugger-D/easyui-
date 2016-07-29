@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>丰登街</title>
+    <style>
+        .content{
+            margin: 16% 35%;
+        }
+        .form-signin-headering{
+            font-size: 18px;
+        }
+        .input-wrapper {
+            margin: 10px 0px;
+            width: 260px;
+            height: 40px;
+            padding-left: 40px;
+            border: 1px solid #ccc;
+            position: relative;
+        }
+        .input-wrapper input {
+            width: 258px;
+            height: 38px;
+            line-height: 40px;
+            font-size: 17px;
+            text-indent: 16px;
+        }
+        input{
+            padding-left: 0;
+            color: #333;
+            border: none;
+            outline: 0;
+            border-left: 1px solid #ccc;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 42px;
+        }
+        .div-phone {
+            background: url(img/sprite.png) -241px -79px no-repeat;
+        }
+        .div-password {
+            background: url(img/sprite.png) -282px -79px no-repeat;
+        }
+        .btn-submit{
+            display: block;
+            width: 302px;
+            height: 44px;
+            text-align: center;
+            color: #fff;
+            background: #ddd;
+            font-size: 18px;
+            line-height: 44px;
+            background: #EFBB43 ;
+            border:none;
+        }
+        .btn-submit:hover{
+            background: #fFBB43 ;
+        }
+        #alertMessage{
+            color:red;
+            font-weight: bold;
+            display: none;
+            height: 21px;
+            margin: 0;
+        }
+        #successMessage{
+            color:green;
+            font-weight: bold;
+            display: none;
+            height: 21px;
+            margin: 0;
+        }
+        .ckin{
+            width: 180px;
+            height: 40px;
+        }
+        .m-ckcnt{
+            width: 100px;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div id="login">
+            <form class="form-signin">
+                <p class="form-signin-headering">管理员登录系统</p>
+                <div class="input-wrapper div-phone">
+                    <input type="text" id="phone" name="username" value="" autocomplete="off" placeholder="登录账号/手机号"/>
+                </div>
+                <div class="input-wrapper div-password">
+                    <input type="password" id="password" name="password" autocomplete="off" placeholder="请输入密码"/>
+                </div>
+                <div class="" style="margin-bottom: 10px">
+                    <div class="">
+                        <input class="" type="text" id="code" style="border: 1px solid #ccc;
+                         height: 38px;
+                         float: left;
+                         width: 165px;
+                         margin-right: 33px;" required="true" id="auto-id-1469682870557" placeholder="验证码">
+                    </div>
+                    <div class="" id="auto-id-1469682870616" onclick="changeValidateCode()">
+                        <img class="" title="点击刷新验证码" alt="点击获取验证码" id="auto-id-1469682870603" src="" style="width: 100px;height: 40px;border: 1px solid #c5cddb">
+                    </div>
+                </div>
+                <p id="alertMessage">用户名或密码错误</p>
+                <p id="successMessage">登陆成功</p>
+                <button type="button" class="btn-submit">登录</button>
+                <span></span>
+            </form>
+        </div>
+    </div>
+    <script src="http://libs.baidu.com/jquery/2.1.4/jquery.js"></script>
+    <script src="js/yuelj.js"></script>
+    <script>
+        $('.btn-submit').click(function () {
+            $('#alertMessage').css('display', 'none')
+            var formdata = {logintype:1};
+            $(".input-wrapper input").each(function () {
+                var name = $(this).attr("id");
+                var val;
+                /* 密码不去首尾空格 */
+                "password" == name ? val = $(this).val() : val = $.yuelj.trimStr($(this).val());
+                formdata[name] = val;
+            });
+            var validateCode= $('#code').val()
+            $.ajax({
+                //url: "/fdj/operatorLogin.action?validateCode="+validateCode,
+                url: "/fdj/operatorLogin.action",
+                data: {
+                    entityJson : JSON.stringify(formdata) ,validateCode:validateCode
+                },
+                success: function (returnData) {
+                    if (returnData === null || returnData.message === null || returnData.state === 0) {
+                        $('#alertMessage').css('display', 'block') ;
+                        changeValidateCode();
+                    }else if(returnData.state === 1){
+                        $('#successMessage').css('display', 'block') ;
+                        window.open('html/operator/operatMain.html','_self')
+                    }
+                }
+            })
+        }) ;
+        $(function () {
+            changeValidateCode();
+        })
+        function changeValidateCode() {
+            //获取当前的时间作为参数，无具体意义
+            var timenow = new Date().getTime();
+            //每次请求需要一个不同的参数，否则可能会返回同样的验证码
+            //这和浏览器的缓存机制有关系，也可以把页面设置为不缓存，这样就不用这个参数了。
+            $('#auto-id-1469682870603').attr("src", "rand.action?d=" + timenow);
+            //obj.src = "rand.action?d=" + timenow;
+        }
+    </script>
+</body>
+</html>
